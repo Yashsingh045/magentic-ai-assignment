@@ -1,0 +1,194 @@
+// Prisma schema for the multi-tenant AI Customer Support SaaS.
+// Vector store is pgvector in this same database.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum DocumentStatus {
+  PROCESSING
+  INDEXED
+  FAILED
+}
+
+enum Personality {
+  PROFESSIONAL
+  FRIENDLY
+  TECHNICAL
+}
+
+enum Channel {
+  WIDGET
+  EMAIL
+  WHATSAPP
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum Priority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  publicApiKey String   @unique @default(cuid())
+  createdAt    DateTime @default(now())
+
+  users          User[]
+  documents      Document[]
+  documentChunks DocumentChunk[]
+  botConfig      BotConfig?
+  conversations  Conversation[]
+  tickets        Ticket[]
+  escalations    EscalationEvent[]
+}
+
+model User {
+  id               String    @id @default(cuid())
+  organizationId   String
+  email            String    @unique
+  passwordHash     String
+  name             String
+  role             Role      @default(AGENT)
+  refreshToken     String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model Document {
+  id             String         @id @default(cuid())
+  organizationId String
+  filename       String
+  fileType       String
+  status         DocumentStatus @default(PROCESSING)
+  sizeBytes      Int
+  uploadedAt     DateTime       @default(now())
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  chunks       DocumentChunk[]
+
+  @@index([organizationId])
+}
+
+model DocumentChunk {
+  id             String @id @default(cuid())
+  organizationId String
+  documentId     String
+  content        String
+  // pgvector column for text-embedding-3-small (1536 dims).
+  embedding      Unsupported("vector(1536)")?
+  chunkIndex     Int
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document     Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([documentId])
+}
+
+model BotConfig {
+  id              String      @id @default(cuid())
+  organizationId  String      @unique
+  botName         String      @default("Support Assistant")
+  welcomeMessage  String      @default("Hi! How can I help you today?")
+  personality     Personality @default(PROFESSIONAL)
+  escalationRules Json        @default("{}")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  organizationId String
+  customerName   String?
+  customerEmail  String?
+  channel        Channel  @default(WIDGET)
+  createdAt      DateTime @default(now())
+  lastMessageAt  DateTime @default(now())
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  escalations  EscalationEvent[]
+
+  @@index([organizationId])
+}
+
+model Message {
+  id               String      @id @default(cuid())
+  conversationId   String
+  role             MessageRole
+  content          String
+  richContent      Json?
+  referencedDocIds Json?
+  responseTimeMs   Int?
+  createdAt        DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  organizationId String
+  conversationId String?
+  customerName   String
+  customerEmail  String
+  query          String
+  priority       Priority     @default(MEDIUM)
+  status         TicketStatus @default(OPEN)
+  createdAt      DateTime     @default(now())
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  escalations  EscalationEvent[]
+
+  @@index([organizationId])
+}
+
+model EscalationEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  conversationId String
+  ticketId       String?
+  reason         String
+  priority       Priority
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  ticket       Ticket?      @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+}
