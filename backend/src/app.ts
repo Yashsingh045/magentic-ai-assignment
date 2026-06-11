@@ -9,6 +9,11 @@ import apiRouter from "./routes";
 export function createApp() {
   const app = express();
 
+  // Render (and most PaaS) puts the app behind one reverse proxy. Trusting a
+  // single hop lets express-rate-limit read the real client IP from
+  // X-Forwarded-For instead of bucketing every tenant under the proxy's IP.
+  app.set("trust proxy", 1);
+
   // Security headers.
   app.use(helmet());
 

@@ -4,15 +4,17 @@ import { AppError } from "./error";
 type Role = "ADMIN" | "AGENT";
 
 /**
- * Restrict a route to specific roles. Must run after requireAuth.
- * e.g. router.delete("/:id", requireAuth, requireRole("ADMIN"), handler)
+ * requireRole(...roles) — RBAC guard. Must run AFTER `authenticate`.
+ * 401 if unauthenticated, 403 if the caller's role isn't allowed.
+ *
+ * e.g. router.delete("/:id", authenticate, requireRole("ADMIN"), handler)
  */
 export function requireRole(...allowed: Role[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    if (!req.auth) {
+    if (!req.user) {
       throw new AppError(401, "Authentication required");
     }
-    if (!allowed.includes(req.auth.role)) {
+    if (!allowed.includes(req.user.role)) {
       throw new AppError(403, "Insufficient permissions");
     }
     next();

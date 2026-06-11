@@ -17,8 +17,8 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 }
 
 export async function me(req: Request, res: Response): Promise<void> {
-  // requireAuth guarantees req.auth is set.
-  const user = await authService.getMe(req.auth!.userId);
+  // authenticate guarantees req.user is set.
+  const user = await authService.getMe(req.user!.id);
   res.json(user);
 }
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as authController from "../controllers/auth.controller";
-import { requireAuth } from "../middleware/auth";
+import { authenticate } from "../middleware/auth";
 import { authLimiter } from "../middleware/rateLimit";
 import { validateBody } from "../middleware/validate";
 import {
@@ -46,6 +46,6 @@ router.post(
 );
 
 // Authenticated.
-router.get("/me", requireAuth, authController.me);
+router.get("/me", authenticate, authController.me);
 
 export default router;
