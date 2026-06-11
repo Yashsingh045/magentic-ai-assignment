@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { health } from "../controllers/health.controller";
 import authRouter from "./auth.routes";
+import configRouter from "./config.routes";
 import dashboardRouter from "./dashboard.routes";
 import documentRouter from "./document.routes";
 
@@ -16,7 +17,7 @@ router.get("/health", health);
 router.use("/auth", authRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/documents", documentRouter);
-// router.use("/config", configRouter);
+router.use("/config", configRouter);
 // router.use("/chat", chatRouter);
 // router.use("/conversations", conversationsRouter);
 // router.use("/tickets", ticketsRouter);

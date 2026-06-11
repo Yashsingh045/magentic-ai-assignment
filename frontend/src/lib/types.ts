@@ -20,6 +20,25 @@ export interface AuthResponse extends AuthTokens {
   user: User;
 }
 
+export type Personality = "PROFESSIONAL" | "FRIENDLY" | "TECHNICAL";
+
+export interface EscalationRules {
+  refundRequested: boolean;
+  legalComplaint: boolean;
+  customerAngry: boolean;
+  humanRequested: boolean;
+  customKeywords: string[];
+}
+
+export interface BotConfig {
+  id: string;
+  organizationId: string;
+  botName: string;
+  welcomeMessage: string;
+  personality: Personality;
+  escalationRules: EscalationRules;
+}
+
 export type DocumentStatus = "PROCESSING" | "INDEXED" | "FAILED";
 
 /** A knowledge-base document as returned by GET /documents. */
