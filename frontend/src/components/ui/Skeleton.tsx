@@ -19,10 +19,10 @@ export function StatCardSkeleton() {
   );
 }
 
-/** A row of stat-card skeletons. */
-export function StatGridSkeleton({ count = 4 }: { count?: number }) {
+/** A row of stat-card skeletons. Mirrors the dashboard's responsive grid. */
+export function StatGridSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {Array.from({ length: count }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}

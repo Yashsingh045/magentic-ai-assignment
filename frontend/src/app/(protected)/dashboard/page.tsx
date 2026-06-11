@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
+  IconCheckCircle,
   IconConversations,
   IconEscalations,
-  IconKnowledge,
+  IconSparkles,
   IconTickets,
 } from "@/components/icons";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -12,37 +13,45 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { ListSkeleton, StatGridSkeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/errors";
 
 interface DashboardStats {
   conversations: number;
-  tickets: number;
-  documents: number;
+  openTickets: number;
+  resolvedTickets: number;
+  escalations: number;
   resolutionRate: number; // 0..1
 }
 
 const EMPTY: DashboardStats = {
   conversations: 0,
-  tickets: 0,
-  documents: 0,
+  openTickets: 0,
+  resolvedTickets: 0,
+  escalations: 0,
   resolutionRate: 0,
 };
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     api
       .get<DashboardStats>("/dashboard/stats")
       .then((r) => active && setStats(r.data))
-      // Endpoint ships in the Dashboard feature; degrade to zeros until then.
-      .catch(() => active && setStats(EMPTY))
+      .catch((err) => active && setError(getApiErrorMessage(err)))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
   }, []);
+
+  // Graceful zero-state: render the cards with zeros even if the call fails,
+  // so a fresh org (or a transient error) still shows a coherent dashboard.
+  const s = stats ?? EMPTY;
+  const hasActivity = s.conversations > 0 || s.openTickets > 0;
 
   return (
     <div>
@@ -51,33 +60,45 @@ export default function DashboardPage() {
         description="An overview of your support workspace."
       />
 
+      {error && (
+        <div className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">
+          Couldn&apos;t load live stats ({error}). Showing zeros.
+        </div>
+      )}
+
       {loading ? (
-        <StatGridSkeleton />
+        <StatGridSkeleton count={5} />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <StatCard
             label="Conversations"
-            value={stats?.conversations ?? 0}
+            value={s.conversations}
             icon={<IconConversations className="h-5 w-5" />}
             hint="Total handled"
           />
           <StatCard
             label="Open Tickets"
-            value={stats?.tickets ?? 0}
+            value={s.openTickets}
             icon={<IconTickets className="h-5 w-5" />}
-            hint="Needs attention"
+            hint="Open or in progress"
           />
           <StatCard
-            label="Documents"
-            value={stats?.documents ?? 0}
-            icon={<IconKnowledge className="h-5 w-5" />}
-            hint="In knowledge base"
+            label="Resolved Tickets"
+            value={s.resolvedTickets}
+            icon={<IconCheckCircle className="h-5 w-5" />}
+            hint="Resolved or closed"
+          />
+          <StatCard
+            label="Escalations"
+            value={s.escalations}
+            icon={<IconEscalations className="h-5 w-5" />}
+            hint="Flagged for humans"
           />
           <StatCard
             label="AI Resolution"
-            value={`${Math.round((stats?.resolutionRate ?? 0) * 100)}%`}
-            icon={<IconEscalations className="h-5 w-5" />}
-            hint="Resolved without escalation"
+            value={`${Math.round(s.resolutionRate * 100)}%`}
+            icon={<IconSparkles className="h-5 w-5" />}
+            hint="Handled without escalation"
           />
         </div>
       )}
@@ -87,9 +108,14 @@ export default function DashboardPage() {
       </h3>
       {loading ? (
         <ListSkeleton rows={4} />
+      ) : hasActivity ? (
+        <EmptyState
+          title="Activity feed coming soon"
+          description="A live timeline of conversations and tickets will appear here."
+        />
       ) : (
         <EmptyState
-          title="No recent activity yet"
+          title="No activity yet"
           description="Conversations and tickets will appear here once your chat widget starts receiving messages."
         />
       )}

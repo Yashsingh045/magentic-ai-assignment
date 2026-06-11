@@ -117,6 +117,15 @@ export function IconLogout({ className }: IconProps) {
   );
 }
 
+export function IconCheckCircle({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M22 11.1V12a10 10 0 1 1-5.9-9.1" />
+      <path d="M22 4 12 14.01l-3-3" />
+    </svg>
+  );
+}
+
 export function IconSparkles({ className }: IconProps) {
   return (
     <svg {...base(className)}>
