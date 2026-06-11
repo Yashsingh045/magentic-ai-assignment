@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getTenantId } from "../middleware/tenant";
 import {
+  parseAssistantReply,
   persistAssistantMessage,
   prepareChat,
   streamReply,
@@ -16,8 +17,9 @@ import {
  *
  * Event shapes (each line: `data: <json>\n\n`):
  *   { type: "meta",  conversationId, referencedDocIds }
- *   { type: "token", text }
- *   { type: "done",  conversationId, referencedDocIds, responseTimeMs }
+ *   { type: "token", text }                       // visible markdown only
+ *   { type: "done",  conversationId, referencedDocIds, responseTimeMs,
+ *                    content, richContent, suggestedQuestions }
  *   { type: "error", error }
  */
 export async function chat(req: Request, res: Response): Promise<void> {
@@ -47,13 +49,15 @@ export async function chat(req: Request, res: Response): Promise<void> {
   });
 
   try {
-    const { text, responseTimeMs } = await streamReply(
+    const { rawText, responseTimeMs } = await streamReply(
       prepared.messages,
       (token) => send({ type: "token", text: token }),
     );
+    // Parse markdown + optional JSON block into structured rich content.
+    const reply = parseAssistantReply(rawText);
     await persistAssistantMessage(
       prepared.conversationId,
-      text,
+      reply,
       responseTimeMs,
       prepared.referencedDocIds,
     );
@@ -62,6 +66,9 @@ export async function chat(req: Request, res: Response): Promise<void> {
       conversationId: prepared.conversationId,
       referencedDocIds: prepared.referencedDocIds,
       responseTimeMs,
+      content: reply.content,
+      richContent: reply.richContent,
+      suggestedQuestions: reply.suggestedQuestions,
     });
   } catch (err) {
     console.error("chat stream error:", err);
