@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 
 /** Operational error with an HTTP status — throw these from controllers/services. */
@@ -33,6 +34,15 @@ export function errorHandler(
       error: "Validation failed",
       details: err.flatten().fieldErrors,
     });
+    return;
+  }
+
+  if (err instanceof MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "File too large (max 10 MB)"
+        : err.message;
+    res.status(400).json({ error: message });
     return;
   }
 

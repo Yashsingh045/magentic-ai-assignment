@@ -59,6 +59,22 @@ export async function insertChunks(chunks: ChunkInsert[]): Promise<number> {
   return prisma.$executeRawUnsafe(sql, ...params);
 }
 
+/**
+ * Re-write embeddings for existing chunks (used by reindex). One UPDATE per
+ * row keeps it simple; chunk counts per org are modest.
+ */
+export async function updateChunkEmbeddings(
+  rows: { id: string; embedding: number[] }[],
+): Promise<void> {
+  for (const r of rows) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE "DocumentChunk" SET "embedding" = $1::vector WHERE "id" = $2`,
+      toSqlVector(r.embedding),
+      r.id,
+    );
+  }
+}
+
 export interface SimilarChunk {
   id: string;
   documentId: string;

@@ -126,6 +126,26 @@ export function IconCheckCircle({ className }: IconProps) {
   );
 }
 
+export function IconTrash({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+export function IconRefresh({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+      <path d="M21 3v6h-6" />
+    </svg>
+  );
+}
+
 export function IconSparkles({ className }: IconProps) {
   return (
     <svg {...base(className)}>

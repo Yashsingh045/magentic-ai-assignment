@@ -19,3 +19,16 @@ export interface AuthTokens {
 export interface AuthResponse extends AuthTokens {
   user: User;
 }
+
+export type DocumentStatus = "PROCESSING" | "INDEXED" | "FAILED";
+
+/** A knowledge-base document as returned by GET /documents. */
+export interface KbDocument {
+  id: string;
+  filename: string;
+  fileType: string;
+  status: DocumentStatus;
+  sizeBytes: number;
+  uploadedAt: string;
+  chunkCount: number;
+}

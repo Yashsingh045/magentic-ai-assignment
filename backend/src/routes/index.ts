@@ -2,6 +2,7 @@ import { Router } from "express";
 import { health } from "../controllers/health.controller";
 import authRouter from "./auth.routes";
 import dashboardRouter from "./dashboard.routes";
+import documentRouter from "./document.routes";
 
 /**
  * Root API router (mounted at /api). Feature routers — auth, dashboard,
@@ -14,7 +15,7 @@ router.get("/health", health);
 
 router.use("/auth", authRouter);
 router.use("/dashboard", dashboardRouter);
-// router.use("/documents", documentsRouter);
+router.use("/documents", documentRouter);
 // router.use("/config", configRouter);
 // router.use("/chat", chatRouter);
 // router.use("/conversations", conversationsRouter);
