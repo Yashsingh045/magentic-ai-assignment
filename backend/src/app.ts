@@ -17,13 +17,24 @@ export function createApp() {
   // Security headers.
   app.use(helmet());
 
-  // CORS — allow the configured frontend origin and the widget's API key header.
-  app.use(
-    cors({
-      origin: env.FRONTEND_URL,
-      credentials: true,
-      allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
-    }),
+  // CORS, split by audience:
+  //  - Admin API (everything except /api/chat): locked to the frontend origin.
+  //  - Public widget chat (/api/chat): reflects any origin, since the widget is
+  //    embedded on arbitrary customer domains. Safe because it's authed by the
+  //    org's publicApiKey, not cookies/credentials.
+  const adminCors = cors({
+    origin: env.FRONTEND_URL,
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  });
+  const widgetCors = cors({
+    origin: true,
+    allowedHeaders: ["Content-Type", "x-api-key"],
+  });
+  app.use((req, res, next) =>
+    req.path.startsWith("/api/chat")
+      ? widgetCors(req, res, next)
+      : adminCors(req, res, next),
   );
 
   // Body parsing.
