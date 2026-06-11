@@ -19,8 +19,3 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
   // Responses come back in input order.
   return res.data.map((d) => d.embedding);
 }
-
-/** Serialize a vector into the pgvector text literal: "[0.1,0.2,...]". */
-export function toVectorLiteral(vec: number[]): string {
-  return `[${vec.join(",")}]`;
-}

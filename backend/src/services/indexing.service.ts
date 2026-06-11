@@ -1,13 +1,14 @@
 /**
  * Knowledge-base indexing pipeline.
- * upload → parse → chunk → embed → store (with embeddings in pgvector).
+ * upload → parse → chunk → embed → store (embeddings in pgvector).
  *
- * Scaffold: signatures are defined; implementations land with the
- * knowledge-base feature. Every operation is org-scoped via organizationId.
+ * Vector writes go through lib/pgvector (insertChunks). Every operation is
+ * org-scoped via organizationId.
  */
 import { prisma } from "../lib/prisma";
+import { insertChunks } from "../lib/pgvector";
 import { chunkText, extractText } from "../utils/fileParsers";
-import { embedBatch, toVectorLiteral } from "./embedding.service";
+import { embedBatch } from "./embedding.service";
 
 export interface IndexDocumentInput {
   organizationId: string;
@@ -28,18 +29,15 @@ export async function indexDocument(input: IndexDocumentInput): Promise<void> {
     const chunks = chunkText(text);
     const embeddings = await embedBatch(chunks);
 
-    // Raw insert because Prisma can't yet bind the Unsupported("vector") type.
-    for (let i = 0; i < chunks.length; i++) {
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "DocumentChunk" ("id","organizationId","documentId","content","embedding","chunkIndex")
-         VALUES (gen_random_uuid(), $1, $2, $3, $4::vector, $5)`,
+    await insertChunks(
+      chunks.map((content, i) => ({
         organizationId,
         documentId,
-        chunks[i],
-        toVectorLiteral(embeddings[i]),
-        i,
-      );
-    }
+        content,
+        embedding: embeddings[i],
+        chunkIndex: i,
+      })),
+    );
 
     await prisma.document.update({
       where: { id: documentId },

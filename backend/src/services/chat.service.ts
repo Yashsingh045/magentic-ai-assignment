@@ -4,38 +4,18 @@
  * BotConfig + retrieved context → call OpenAI → persist messages → escalation
  * check → return rich content + suggested questions.
  *
- * Scaffold: retrieval helper is sketched; the full orchestration lands with the
- * chat feature. Everything is org-scoped via organizationId.
+ * Scaffold: retrieval is wired via lib/pgvector; the full orchestration lands
+ * with the chat feature. Everything is org-scoped via organizationId.
  */
-import { prisma } from "../lib/prisma";
-import { embedText, toVectorLiteral } from "./embedding.service";
+import { searchSimilarChunks, type SimilarChunk } from "../lib/pgvector";
+import { embedText } from "./embedding.service";
 
-export interface RetrievedChunk {
-  id: string;
-  documentId: string;
-  content: string;
-  distance: number;
-}
-
-/**
- * Top-K cosine search over a single org's DocumentChunks using pgvector's
- * `<=>` operator. Org filter in the WHERE clause enforces tenant isolation.
- */
-export async function searchChunks(
+/** Top-K cosine retrieval for one org's knowledge base. */
+export async function retrieveContext(
   organizationId: string,
   query: string,
   k = 5,
-): Promise<RetrievedChunk[]> {
-  const embedding = toVectorLiteral(await embedText(query));
-
-  return prisma.$queryRawUnsafe<RetrievedChunk[]>(
-    `SELECT "id", "documentId", "content", ("embedding" <=> $1::vector) AS "distance"
-     FROM "DocumentChunk"
-     WHERE "organizationId" = $2
-     ORDER BY "embedding" <=> $1::vector
-     LIMIT $3`,
-    embedding,
-    organizationId,
-    k,
-  );
+): Promise<SimilarChunk[]> {
+  const embedding = await embedText(query);
+  return searchSimilarChunks(organizationId, embedding, k);
 }

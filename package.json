@@ -1,0 +1,12 @@
+{
+  "name": "smart-customer-assistant",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Multi-tenant AI Customer Support SaaS — backend (Express) + frontend (Next.js)",
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend"
+  }
+}
