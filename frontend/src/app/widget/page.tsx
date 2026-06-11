@@ -1,28 +1,41 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatWidget } from "@/components/widget/ChatWidget";
 
-/** Reads the publicApiKey from the query and mounts the widget (client-only). */
 function WidgetMount() {
   const params = useSearchParams();
   const key = params.get("key") ?? "";
   const apiBase = params.get("api") ?? undefined;
+  const embed = params.get("embed") === "1";
+
+  // In embed mode (inside the widget.js iframe), make the document transparent
+  // so only the bubble/window show over the host page.
+  useEffect(() => {
+    if (!embed) return;
+    document.documentElement.style.background = "transparent";
+    document.body.style.background = "transparent";
+  }, [embed]);
 
   if (!key) {
     return (
-      <p className="mt-6 text-center text-sm text-amber-600">
-        Missing widget key — open this page with{" "}
-        <code className="rounded bg-amber-50 px-1">?key=YOUR_PUBLIC_API_KEY</code>
-        .
-      </p>
+      <main className="flex min-h-screen items-center justify-center p-6 text-center">
+        <p className="text-sm text-amber-600">
+          Missing widget key — open with{" "}
+          <code className="rounded bg-amber-50 px-1">?key=YOUR_PUBLIC_API_KEY</code>
+          .
+        </p>
+      </main>
     );
   }
-  return <ChatWidget apiKey={key} apiBase={apiBase} />;
-}
 
-export default function WidgetPage() {
+  // Embedded: render only the widget on a transparent page.
+  if (embed) {
+    return <ChatWidget apiKey={key} apiBase={apiBase} />;
+  }
+
+  // Standalone preview page.
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50 p-8">
       <div className="mx-auto max-w-2xl text-center text-gray-500">
@@ -34,9 +47,15 @@ export default function WidgetPage() {
           the bottom-right corner to start chatting.
         </p>
       </div>
-      <Suspense fallback={null}>
-        <WidgetMount />
-      </Suspense>
+      <ChatWidget apiKey={key} apiBase={apiBase} />
     </main>
+  );
+}
+
+export default function WidgetPage() {
+  return (
+    <Suspense fallback={null}>
+      <WidgetMount />
+    </Suspense>
   );
 }

@@ -90,6 +90,16 @@ export function ChatWidget({
     });
   }, [messages, open]);
 
+  // When embedded in an iframe (widget.js), tell the host to resize the iframe
+  // to match our open/closed state. No-op when not framed.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.parent === window) return;
+    window.parent.postMessage(
+      { source: "ai-support-widget", type: "state", open },
+      "*",
+    );
+  }, [open]);
+
   const send = useCallback(
     async (text: string) => {
       const message = text.trim();
