@@ -72,6 +72,24 @@ export async function getConfig(
   return toView(config);
 }
 
+export interface PublicBotConfig {
+  botName: string;
+  welcomeMessage: string;
+  personality: BotConfigView["personality"];
+}
+
+/** Non-sensitive config the public widget needs (no escalation rules). */
+export async function getPublicConfig(
+  organizationId: string,
+): Promise<PublicBotConfig> {
+  const c = await getConfig(organizationId);
+  return {
+    botName: c.botName,
+    welcomeMessage: c.welcomeMessage,
+    personality: c.personality,
+  };
+}
+
 /** Replace the org's BotConfig (upsert keeps it robust if the row is missing). */
 export async function updateConfig(
   organizationId: string,

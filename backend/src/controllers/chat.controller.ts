@@ -1,11 +1,18 @@
 import { Request, Response } from "express";
 import { getTenantId } from "../middleware/tenant";
+import { getPublicConfig } from "../services/config.service";
 import {
   parseAssistantReply,
   persistAssistantMessage,
   prepareChat,
   streamReply,
 } from "../services/chat.service";
+
+/** Public bot config for the widget (authed by publicApiKey via tenantFromApiKey). */
+export async function widgetConfig(req: Request, res: Response): Promise<void> {
+  const organizationId = getTenantId(req);
+  res.json(await getPublicConfig(organizationId));
+}
 
 /**
  * Public streaming chat endpoint (SSE).

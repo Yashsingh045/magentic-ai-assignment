@@ -10,3 +10,104 @@ html,
 body {
   height: 100%;
 }
+
+/* ---- Chat widget animations ---- */
+@keyframes widget-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-widget-in {
+  animation: widget-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-msg-in {
+  animation: msg-in 0.18s ease-out;
+}
+
+/* ---- Markdown styling for assistant messages ---- */
+.widget-prose {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #1f2937;
+  word-break: break-word;
+}
+.widget-prose > :first-child {
+  margin-top: 0;
+}
+.widget-prose > :last-child {
+  margin-bottom: 0;
+}
+.widget-prose p {
+  margin: 0.4rem 0;
+}
+.widget-prose ul,
+.widget-prose ol {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+}
+.widget-prose ul {
+  list-style: disc;
+}
+.widget-prose ol {
+  list-style: decimal;
+}
+.widget-prose li {
+  margin: 0.15rem 0;
+}
+.widget-prose a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+.widget-prose strong {
+  font-weight: 600;
+}
+.widget-prose code {
+  background: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.8em;
+}
+.widget-prose pre {
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.6rem;
+  overflow-x: auto;
+  margin: 0.4rem 0;
+}
+.widget-prose pre code {
+  background: none;
+  padding: 0;
+}
+.widget-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.4rem 0;
+  font-size: 0.8rem;
+}
+.widget-prose th,
+.widget-prose td {
+  border: 1px solid #e5e7eb;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+}
+.widget-prose th {
+  background: #f9fafb;
+  font-weight: 600;
+}
