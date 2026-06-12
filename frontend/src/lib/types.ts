@@ -41,6 +41,21 @@ export interface BotConfig {
 
 export type DocumentStatus = "PROCESSING" | "INDEXED" | "FAILED";
 
+export type Priority = "URGENT" | "HIGH" | "MEDIUM" | "LOW";
+export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
+export interface Ticket {
+  id: string;
+  organizationId: string;
+  conversationId: string | null;
+  customerName: string;
+  customerEmail: string;
+  query: string;
+  priority: Priority;
+  status: TicketStatus;
+  createdAt: string;
+}
+
 /** A knowledge-base document as returned by GET /documents. */
 export interface KbDocument {
   id: string;

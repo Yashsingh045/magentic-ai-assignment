@@ -5,6 +5,7 @@ import chatRouter from "./chat.routes";
 import configRouter from "./config.routes";
 import dashboardRouter from "./dashboard.routes";
 import documentRouter from "./document.routes";
+import ticketRouter from "./ticket.routes";
 
 /**
  * Root API router (mounted at /api). Feature routers — auth, dashboard,
@@ -21,7 +22,7 @@ router.use("/documents", documentRouter);
 router.use("/config", configRouter);
 router.use("/chat", chatRouter);
 // router.use("/conversations", conversationsRouter);
-// router.use("/tickets", ticketsRouter);
+router.use("/tickets", ticketRouter);
 // router.use("/escalations", escalationsRouter);
 // router.use("/analytics", analyticsRouter);
 
