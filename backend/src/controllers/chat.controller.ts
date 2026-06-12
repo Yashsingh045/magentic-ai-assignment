@@ -79,10 +79,12 @@ export async function chat(req: Request, res: Response): Promise<void> {
       suggestedQuestions: reply.suggestedQuestions,
     });
 
-    // Fire-and-forget escalation check on the customer's message — runs its own
-    // rule+LLM detection and creates a Ticket + EscalationEvent if warranted.
-    // Not awaited: it must not add latency to the chat response.
-    void escalateConversation({
+    // Escalation check on the customer's message — runs rule+LLM detection and
+    // creates a Ticket + EscalationEvent if warranted. Awaited AFTER the `done`
+    // event (so it adds no perceived latency — the answer is already streamed),
+    // which keeps it reliable on serverless platforms (e.g. Vercel) that freeze
+    // the function once the response ends.
+    await escalateConversation({
       organizationId,
       conversationId: prepared.conversationId,
       message,
