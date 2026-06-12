@@ -56,6 +56,23 @@ export interface Ticket {
   createdAt: string;
 }
 
+export interface EscalationItem {
+  id: string;
+  reason: string;
+  priority: Priority;
+  createdAt: string;
+  conversationId: string;
+  ticket: {
+    id: string;
+    customerName: string;
+    customerEmail: string;
+    query: string;
+    status: TicketStatus;
+  } | null;
+}
+
+export type GroupedEscalations = Record<Priority, EscalationItem[]>;
+
 /** A knowledge-base document as returned by GET /documents. */
 export interface KbDocument {
   id: string;

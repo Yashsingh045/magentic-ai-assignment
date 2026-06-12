@@ -5,6 +5,7 @@ import chatRouter from "./chat.routes";
 import configRouter from "./config.routes";
 import dashboardRouter from "./dashboard.routes";
 import documentRouter from "./document.routes";
+import escalationRouter from "./escalation.routes";
 import ticketRouter from "./ticket.routes";
 
 /**
@@ -23,7 +24,7 @@ router.use("/config", configRouter);
 router.use("/chat", chatRouter);
 // router.use("/conversations", conversationsRouter);
 router.use("/tickets", ticketRouter);
-// router.use("/escalations", escalationsRouter);
+router.use("/escalations", escalationRouter);
 // router.use("/analytics", analyticsRouter);
 
 export default router;

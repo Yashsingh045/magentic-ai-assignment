@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getTenantId } from "../middleware/tenant";
 import { getPublicConfig } from "../services/config.service";
+import { escalateConversation } from "../services/escalation.service";
 import {
   parseAssistantReply,
   persistAssistantMessage,
@@ -77,6 +78,17 @@ export async function chat(req: Request, res: Response): Promise<void> {
       richContent: reply.richContent,
       suggestedQuestions: reply.suggestedQuestions,
     });
+
+    // Fire-and-forget escalation check on the customer's message — runs its own
+    // rule+LLM detection and creates a Ticket + EscalationEvent if warranted.
+    // Not awaited: it must not add latency to the chat response.
+    void escalateConversation({
+      organizationId,
+      conversationId: prepared.conversationId,
+      message,
+      customerName,
+      customerEmail,
+    }).catch((err) => console.error("escalation error:", err));
   } catch (err) {
     console.error("chat stream error:", err);
     send({
