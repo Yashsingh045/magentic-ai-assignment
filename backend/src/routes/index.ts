@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { health } from "../controllers/health.controller";
+import analyticsRouter from "./analytics.routes";
 import authRouter from "./auth.routes";
 import chatRouter from "./chat.routes";
 import configRouter from "./config.routes";
@@ -26,6 +27,6 @@ router.use("/chat", chatRouter);
 router.use("/conversations", conversationRouter);
 router.use("/tickets", ticketRouter);
 router.use("/escalations", escalationRouter);
-// router.use("/analytics", analyticsRouter);
+router.use("/analytics", analyticsRouter);
 
 export default router;

@@ -73,6 +73,24 @@ export interface EscalationItem {
 
 export type GroupedEscalations = Record<Priority, EscalationItem[]>;
 
+export interface Analytics {
+  chat: {
+    totalConversations: number;
+    avgResponseTimeMs: number;
+    resolutionRate: number;
+    escalationRate: number;
+  };
+  kb: {
+    mostReferencedDocs: {
+      documentId: string;
+      filename: string;
+      references: number;
+    }[];
+    failedQueries: number;
+    unansweredQuestions: { question: string; at: string }[];
+  };
+}
+
 export type Channel = "WIDGET" | "EMAIL" | "WHATSAPP";
 
 export interface ConversationListItem {
