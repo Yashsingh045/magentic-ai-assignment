@@ -73,6 +73,64 @@ export interface EscalationItem {
 
 export type GroupedEscalations = Record<Priority, EscalationItem[]>;
 
+export type Channel = "WIDGET" | "EMAIL" | "WHATSAPP";
+
+export interface ConversationListItem {
+  id: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  channel: Channel;
+  createdAt: string;
+  lastMessageAt: string;
+  messageCount: number;
+  lastMessage: { content: string; role: "USER" | "ASSISTANT" } | null;
+}
+
+export interface ConversationListResponse {
+  items: ConversationListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  role: "USER" | "ASSISTANT";
+  content: string;
+  richContent: {
+    blocks: import("./chat-types").RichContentBlock[];
+    suggestedQuestions: string[];
+  } | null;
+  referencedDocIds: string[] | null;
+  responseTimeMs: number | null;
+  createdAt: string;
+}
+
+export interface ConversationDetail {
+  id: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  channel: Channel;
+  createdAt: string;
+  lastMessageAt: string;
+  messages: ConversationMessage[];
+  escalations: {
+    id: string;
+    reason: string;
+    priority: Priority;
+    ticketId: string | null;
+    createdAt: string;
+  }[];
+  tickets: {
+    id: string;
+    priority: Priority;
+    status: TicketStatus;
+    query: string;
+    createdAt: string;
+  }[];
+}
+
 /** A knowledge-base document as returned by GET /documents. */
 export interface KbDocument {
   id: string;
