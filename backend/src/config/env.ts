@@ -23,6 +23,11 @@ const envSchema = z.object({
     .min(16, "JWT_REFRESH_SECRET must be at least 16 chars"),
 
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+  // Optional: point the OpenAI-compatible client at another provider (e.g.
+  // Gemini's OpenAI-compatible endpoint). Defaults to Gemini in lib/openai.
+  OPENAI_BASE_URL: z.string().url().optional(),
+  CHAT_MODEL: z.string().optional(),
+  EMBEDDING_MODEL: z.string().optional(),
 
   FRONTEND_URL: z.string().url().default("http://localhost:3000"),
 });

@@ -71,11 +71,9 @@ export default function KnowledgeBasePage() {
       for (const file of files) {
         const form = new FormData();
         form.append("file", file);
-        // Override the client's default JSON content-type so axios sends the
-        // FormData (with a multipart boundary) instead of serializing it.
-        await api.post("/documents", form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // No explicit Content-Type: let the browser set multipart/form-data
+        // WITH the required boundary (a hardcoded header omits the boundary).
+        await api.post("/documents", form);
       }
       await fetchDocs();
     } catch (err) {

@@ -17,10 +17,16 @@ if (!baseURL && typeof window !== "undefined") {
   console.error("NEXT_PUBLIC_API_URL is not set — API calls will fail.");
 }
 
-/** Shared axios instance. All app/server calls go through this. */
+/**
+ * Shared axios instance. All app/server calls go through this.
+ *
+ * No default Content-Type on purpose: axios sets `application/json` for plain
+ * object bodies and `multipart/form-data` (with the required boundary) for
+ * FormData uploads. Hardcoding it here would send file uploads without a
+ * boundary, which the server can't parse.
+ */
 export const api = axios.create({
   baseURL: `${baseURL ?? ""}/api`,
-  headers: { "Content-Type": "application/json" },
 });
 
 // ---- Request interceptor: attach the access token ----

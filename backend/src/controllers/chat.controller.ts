@@ -3,11 +3,13 @@ import { getTenantId } from "../middleware/tenant";
 import { getPublicConfig } from "../services/config.service";
 import { escalateConversation } from "../services/escalation.service";
 import {
+  keywordFallbackAnswer,
   parseAssistantReply,
   persistAssistantMessage,
   prepareChat,
   streamReply,
 } from "../services/chat.service";
+import type { AssistantReply } from "../types/chat";
 
 /** Public bot config for the widget (authed by publicApiKey via tenantFromApiKey). */
 export async function widgetConfig(req: Request, res: Response): Promise<void> {
@@ -57,22 +59,41 @@ export async function chat(req: Request, res: Response): Promise<void> {
   });
 
   try {
-    const { rawText, responseTimeMs } = await streamReply(
-      prepared.messages,
-      (token) => send({ type: "token", text: token }),
-    );
-    // Parse markdown + optional JSON block into structured rich content.
-    const reply = parseAssistantReply(rawText);
+    let reply: AssistantReply;
+    let responseTimeMs: number;
+    let referencedDocIds = prepared.referencedDocIds;
+
+    try {
+      // Primary path: stream the OpenAI reply.
+      const r = await streamReply(prepared.messages, (token) =>
+        send({ type: "token", text: token }),
+      );
+      responseTimeMs = r.responseTimeMs;
+      reply = parseAssistantReply(r.rawText);
+    } catch (llmErr) {
+      // OpenAI chat unavailable (e.g. no quota) → extractive keyword fallback
+      // from the org's documents, so the widget still answers instead of erroring.
+      console.warn(
+        "chat: LLM unavailable, using extractive fallback —",
+        (llmErr as { code?: string })?.code ?? "",
+      );
+      const fb = await keywordFallbackAnswer(organizationId, message);
+      send({ type: "token", text: fb.text });
+      reply = { content: fb.text, richContent: [], suggestedQuestions: [] };
+      responseTimeMs = 0;
+      referencedDocIds = fb.referencedDocIds;
+    }
+
     await persistAssistantMessage(
       prepared.conversationId,
       reply,
       responseTimeMs,
-      prepared.referencedDocIds,
+      referencedDocIds,
     );
     send({
       type: "done",
       conversationId: prepared.conversationId,
-      referencedDocIds: prepared.referencedDocIds,
+      referencedDocIds,
       responseTimeMs,
       content: reply.content,
       richContent: reply.richContent,

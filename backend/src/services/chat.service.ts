@@ -307,6 +307,57 @@ export function parseAssistantReply(rawText: string): AssistantReply {
   }
 }
 
+const FALLBACK_NO_ANSWER =
+  "I'm sorry, I don't have that information right now. I can connect you with a human agent if you'd like.";
+
+const STOPWORDS = new Set([
+  "the", "and", "for", "you", "your", "are", "what", "how", "can", "does",
+  "with", "this", "that", "have", "has", "our", "any", "about", "from", "will",
+]);
+
+/**
+ * Extractive fallback answer used when the OpenAI chat model is unavailable.
+ * Keyword-matches the query against the org's stored chunk text and returns the
+ * best-matching chunk, so the widget still gives a doc-grounded reply instead of
+ * erroring. Degraded (no generation), but functional.
+ */
+export async function keywordFallbackAnswer(
+  organizationId: string,
+  query: string,
+): Promise<{ text: string; referencedDocIds: string[] }> {
+  const terms = [
+    ...new Set(
+      (query.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []).filter(
+        (w) => !STOPWORDS.has(w),
+      ),
+    ),
+  ];
+  if (terms.length === 0) {
+    return { text: FALLBACK_NO_ANSWER, referencedDocIds: [] };
+  }
+
+  const chunks = await prisma.documentChunk.findMany({
+    where: { organizationId },
+    select: { content: true, documentId: true },
+  });
+
+  let best: { content: string; documentId: string } | null = null;
+  let bestScore = 0;
+  for (const c of chunks) {
+    const lc = c.content.toLowerCase();
+    const score = terms.reduce((n, t) => (lc.includes(t) ? n + 1 : n), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = c;
+    }
+  }
+
+  if (!best || bestScore === 0) {
+    return { text: FALLBACK_NO_ANSWER, referencedDocIds: [] };
+  }
+  return { text: best.content.trim(), referencedDocIds: [best.documentId] };
+}
+
 /** Persist the ASSISTANT message (markdown + rich content) and bump activity. */
 export async function persistAssistantMessage(
   conversationId: string,
